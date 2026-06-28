@@ -1,0 +1,1021 @@
+local plr = game.Players.LocalPlayer
+
+-- ตัด VIP Check System ออกแล้ว แต่โครงสร้างข้างล่างนี้กูไม่แตะเลยตามที่บอก
+
+---------------------------------------------------------
+-- [ NEW: STAFF JOIN NOTIFICATION ]
+---------------------------------------------------------
+local function notifyStaff(player)
+    if player.Name == "ffsww_1007" then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "CREATOR JOINED!",
+            Text = "The Creator (ffsww_1007) has entered the server.",
+            Duration = 15,
+            Button1 = "OK"
+        })
+    elseif player.Name == "A_ASPD" then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "ADMIN JOINED!",
+            Text = "Admin (A_ASPD) has entered the server.",
+            Duration = 15,
+            Button1 = "OK"
+        })
+    end
+end
+
+for _, p in ipairs(game.Players:GetPlayers()) do
+    if p ~= plr then notifyStaff(p) end
+end
+game.Players.PlayerAdded:Connect(notifyStaff)
+
+---------------------------------------------------------
+-- [ UTILS & SERVICES ]
+---------------------------------------------------------
+function missing(t, f, fallback)
+    if type(f) == t then return f end
+    return fallback
+end
+    
+cloneref = missing("function", cloneref, function(...) return ... end)
+    
+local Services = setmetatable({}, {
+  __index = function(_, name)
+      return cloneref(game:GetService(name))
+  end
+})
+    
+local Players = Services.Players
+local RunService = Services.RunService
+local StarterGui = Services.StarterGui
+
+-- Control variables for Quick Holster
+local isForcingHolster = false
+
+-- Ultra-Fast Holster System (Runs every frame)
+task.spawn(function()
+    RunService.Stepped:Connect(function()
+        if isForcingHolster then
+            local char = plr.Character
+            if char then
+                for _, tool in ipairs(char:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        tool.Parent = plr.Backpack
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+-- Custom Notification Function
+local function sendScriptMsg(title, text)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 3
+    })
+end
+
+---------------------------------------------------------
+-- [ NEW: AUTO SAVE & RETRIEVE SYSTEM ]
+---------------------------------------------------------
+local function handleInventorySync(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+    
+    humanoid.Died:Connect(function()
+        sendScriptMsg("System", "Saving items to safe...")
+        toolStorage:FireServer("Save", "Gun")
+        toolStorage:FireServer("Save", "Phone")
+        toolStorage:FireServer("Save", "Boombox")
+    end)
+    
+    task.wait(1) 
+    sendScriptMsg("System", "Retrieving all items...")
+    toolStorage:FireServer("Get", "Gun")
+    toolStorage:FireServer("Get", "Phone")
+    toolStorage:FireServer("Get", "Boombox")
+end
+
+plr.CharacterAdded:Connect(handleInventorySync)
+if plr.Character then task.spawn(handleInventorySync, plr.Character) end
+    
+---------------------------------------------------------
+-- [ NEW: TYPEWRITER EFFECT ON RUN ]
+---------------------------------------------------------
+task.spawn(function()
+    local displayTitle = "Script Word [" .. plr.Name .. "]" 
+    local remote = game:GetService("ReplicatedStorage"):WaitForChild("NameTagRemoteEvent")
+    local currentText = ""
+    for i = 1, #displayTitle do
+        currentText = string.sub(displayTitle, 1, i)
+        remote:FireServer(currentText, Color3.fromRGB(255, 255, 255), 38)
+        task.wait(0.1)
+    end
+    task.wait(5)
+    remote:FireServer(plr.Name, Color3.fromRGB(255, 255, 255), 38)
+end)
+
+if game.PlaceId == 4503309821 then
+    local function onCharacterAdded(p)
+        StarterGui:SetCore("SendNotification",{
+          Title="Credit : Human",
+          Text="Anti Crash Active",
+          Duration=10
+        })
+        local strgui = game:WaitForChild("StarterGui")
+        local plrgui = p:WaitForChild("PlayerGui")
+      
+        local strAncm = strgui:WaitForChild("Announcement")
+        local plrAncm = plrgui:WaitForChild("Announcement")
+        local AncmFrame = plrAncm:WaitForChild("Frame")
+        plrAncm:Destroy()
+        plrgui.ChildAdded:Connect(function(gui)
+            if gui.Name == "Announcement" then
+                gui:Destroy()
+            end
+        end)
+    end  
+    plr.CharacterAdded:Connect(onCharacterAdded)
+    if plr or plr.Character then onCharacterAdded(plr) end
+end
+
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("Multi-Hub System (ULTIMATE)", "Default")
+
+---------------------------------------------------------
+-- [ SETTINGS & VARIABLES ]
+---------------------------------------------------------
+local autoSwapEnabled = false
+local shootForwardEnabled = false 
+local lockOnEnabled = true
+local autoClaimEnabled = false 
+local tpAboveHeadEnabled = false
+local orbitSpinEnabled = false 
+local spinLockEnabled = false
+local autoBuyLoop = false
+local autoBuyPhoneLoop = false
+local autoBuyBoomboxLoop = false
+local autoSellEnabled = false 
+local targetSearchName = ""
+local hitboxEnabled = false
+local hitboxSize = 10000 -- ปรับขนาดให้ใหญ่ครอบคลุมทั้งแมพ (ป้องกันคนไม่โดน)
+local rainbowNameEnabled = false
+local rainbowBoomboxEnabled = false
+local customNameTag = "Script Word By " .. plr.Name 
+local silentAimKill = false 
+
+local gunOrbitEnabled = false
+local orbitAngle = 0
+local bossHunterSpin = false
+local bhAngle = 0
+local fastRemotes = false
+local reachEnabled = false
+local autoArmor = false
+local noClipEnabled = false
+local flightEnabled = false
+local flySpeed = 50
+local stopAllFirefly = false
+local fireflyCount = 100
+local fireflySpawning = false
+local antiWarpEnabled = false
+local lastValidPos = nil
+local clickKillEnabled = false
+local mouse = plr:GetMouse()
+local skySentryEnabled = false
+local skyHeight = 50
+local mapSweeperEnabled = false 
+local ultimateBossHunterEnabled = false
+local ubhAngle = 0
+local burstFireEnabled = false
+local burstAmount = 5
+local mapDestroyerEnabled = false -- New variable
+
+local remoteFeetV1 = false
+local remoteFeetV2 = false
+local remoteFeetV3 = false
+local swapShootV1 = false
+local swapShootV2 = false
+local swapShootV3 = false
+
+---------------------------------------------------------
+-- [ FUNCTION: UTILS ]
+---------------------------------------------------------
+local function getClosestPlayer(range)
+    local closestPlayer = nil
+    local shortestDistance = range
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= plr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.Health > 0 then
+            local distance = plr:DistanceFromCharacter(player.Character.HumanoidRootPart.Position)
+            if distance > 0 and distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = player
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local function getUltimateTargetPos(target)
+    if not target or not target.Character then return nil end
+    local head = target.Character:FindFirstChild("Head")
+    local root = target.Character:FindFirstChild("HumanoidRootPart")
+    if head and root then
+        local vel = root.Velocity
+        local prediction = head.Position + (vel * 0.21) 
+        if vel.Y > 5 then prediction = prediction - Vector3.new(0, 0.8, 0) end
+        return prediction
+    end
+    return nil
+end
+
+-- [ UPDATED: ADVANCED SHOOTING & REMOTE MIGRATION ]
+local function advancedSwapShoot(target, mode)
+    local char = plr.Character
+    if not char or not target or not target.Character then return end
+    local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+    if not targetRoot then return end
+    
+    local guns = {}
+    for _, v in ipairs(plr.Backpack:GetChildren()) do if v:IsA("Tool") and v.Name ~= "Phone" and v.Name ~= "Boombox" then table.insert(guns, v) end end
+    if #guns == 0 then return end
+
+    local aimPos = getUltimateTargetPos(target)
+    
+    for i, gun in ipairs(guns) do
+        task.spawn(function()
+            -- บังคับถือและยิงแบบเสี้ยววินาทีเพื่อให้ Remote ย้ายตามมาที่ตัว
+            char.Humanoid:EquipTool(gun)
+            local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+            if remote then
+                local shootAt = (mode == "feet") and (targetRoot.Position - Vector3.new(0, 3, 0)) or aimPos
+                -- ยิงเป็นชุด (Burst) ตามที่สั่ง
+                local loopCount = burstFireEnabled and burstAmount or 3
+                for b = 1, loopCount do
+                    remote:FireServer(shootAt)
+                end
+            end
+            -- ดีดกลับเข้า Backpack ทันทีเพื่อความเนียนและให้ Remote อัปเดตตำแหน่งตามเรามา
+            gun.Parent = plr.Backpack 
+        end)
+        -- ความเร็วในการวนลูปสลับปืน
+        if i % 2 == 0 then RunService.Heartbeat:Wait() end
+    end
+end
+
+local function safeUltraShoot(targetPos)
+    local character = plr.Character
+    if not character then return end
+    local tools = {}
+    for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" then table.insert(tools, item) end end
+    for _, item in ipairs(character:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" then table.insert(tools, item) end end
+    for i, tool in ipairs(tools) do
+        local remote = tool:FindFirstChild("shot") or tool:FindFirstChild("RemoteEvent")
+        if remote then
+            task.spawn(function()
+                character.Humanoid:EquipTool(tool)
+                local loopCount = burstFireEnabled and burstAmount or 1
+                for b = 1, loopCount do
+                    remote:FireServer(targetPos)
+                end
+                tool.Parent = plr.Backpack
+            end)
+            if i % 3 == 0 then task.wait() end 
+        end
+    end
+end
+
+local function spawnFireflies(count)
+    if stopAllFirefly then return end
+    local fireflies = plr.Backpack:FindFirstChild("Fireflies") or plr.Character:FindFirstChild("Fireflies")
+    if not fireflies then return end
+    local remote = fireflies:FindFirstChild("RemoteEvent")
+    if not remote then return end
+    fireflySpawning = true
+    task.spawn(function()
+        for i = 1, count do
+            if stopAllFirefly then break end
+            pcall(function() remote:FireServer() end)
+            if i % 100 == 0 then task.wait() end
+        end
+        fireflySpawning = false
+    end)
+end
+
+local function needsMore(itemName)
+    local count = 0
+    for _, v in ipairs(plr.Backpack:GetChildren()) do if v.Name == itemName then count = count + 1 end end
+    if plr.Character then
+        for _, v in ipairs(plr.Character:GetChildren()) do if v.Name == itemName then count = count + 1 end end
+    end
+    return count < 10
+end
+
+---------------------------------------------------------
+-- [ UPDATED: ADMIN & CREATOR COMMANDS ]
+---------------------------------------------------------
+local scriptAdmins = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1"}
+
+local function runAdminCommand(sender, message)
+    local msg = string.lower(message)
+    local parts = string.split(msg, " ")
+    local cmd = parts[1]
+    local targetInput = parts[2]
+    
+    local isAdminSender = false
+    for _, adminName in ipairs(scriptAdmins) do
+        if sender.Name == adminName then isAdminSender = true break end
+    end
+
+    if isAdminSender then
+        if cmd == "!cmd" then sendScriptMsg("Commands List", "!kick, !freeze, !r, !firefly...") end
+        if targetInput then
+            local targetPlayer = nil
+            for _, p in ipairs(game.Players:GetPlayers()) do
+                if string.find(string.lower(p.Name), string.lower(targetInput)) then targetPlayer = p break end
+            end
+            if targetPlayer then
+                if cmd == "!kick" then
+                    if targetPlayer == plr and not (plr.Name == "ffsww_1007" or plr.Name == "A_ASPD") then plr:Kick("Kicked by Admin") end
+                elseif cmd == "!freeze" then
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then targetPlayer.Character.HumanoidRootPart.Anchored = true end
+                elseif cmd == "!r" then
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then targetPlayer.Character.Humanoid.Health = 0 end
+                end
+            end
+        end
+        if cmd == "!firefly" then spawnFireflies(tonumber(parts[2]) or 100)
+        elseif cmd == "!fireflystop" then stopAllFirefly = true task.wait(0.5) stopAllFirefly = false
+        elseif cmd == "!fireflyclear" then
+            for _, obj in pairs(workspace:GetDescendants()) do if string.find(string.lower(obj.Name), "firefly") then obj:Destroy() end end
+        end
+    end
+end
+
+for _, p in ipairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(msg) runAdminCommand(p, msg) end) end
+game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(msg) runAdminCommand(p, msg) end) end)
+
+---------------------------------------------------------
+-- [ TAB 1: COMBAT ]
+---------------------------------------------------------
+local mainTab = DrRayLibrary.newTab("Combat", "rbxassetid://10734951151")
+
+mainTab.newLabel("--- [ ULTIMATE MAP DESTROYER ] ---")
+mainTab.newToggle("MAP DESTROYER (1-CLICK KILL ALL)", "Kill every player in the server instantly", false, function(state)
+    mapDestroyerEnabled = state
+    task.spawn(function()
+        while mapDestroyerEnabled do
+            local guns = {}
+            for _, v in ipairs(plr.Backpack:GetChildren()) do if v:IsA("Tool") and v.Name ~= "Phone" and v.Name ~= "Boombox" then table.insert(guns, v) end end
+            if #guns > 0 then
+                for _, target in ipairs(game.Players:GetPlayers()) do
+                    if target ~= plr and not table.find(scriptAdmins, target.Name) and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                        local tRoot = target.Character.HumanoidRootPart
+                        -- ยิงถล่มด้วยความเร็วสูงสุดพร้อมกันแบบเสี้ยววินาที
+                        task.spawn(function()
+                            local gun = guns[math.random(1, #guns)]
+                            local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                            if remote then
+                                -- ส่งดาเมจ 50 นัดในครั้งเดียวเพื่อให้ตายคาที่
+                                for i = 1, 50 do 
+                                    remote:FireServer(tRoot.Position) 
+                                end
+                            end
+                        end)
+                    end
+                end
+            end
+            task.wait() -- รันซ้ำทันทีที่ทำได้
+        end
+    end)
+end)
+
+mainTab.newLabel("--- Remote Under Feet (ใต้ตีน) ---")
+mainTab.newToggle("Remote Feet V1 (Lock-On)", "Shoot under feet of closest target", false, function(state)
+    remoteFeetV1 = state
+    task.spawn(function()
+        while remoteFeetV1 do
+            local target = getClosestPlayer(1000)
+            if target then advancedSwapShoot(target, "feet") end
+            task.wait(0.05)
+        end
+    end)
+end)
+
+mainTab.newToggle("Remote Feet V2 (Fast Swap)", "Insane Speed Remote Under Feet", false, function(state)
+    remoteFeetV2 = state
+    task.spawn(function()
+        while remoteFeetV2 do
+            local target = getClosestPlayer(800)
+            if target then advancedSwapShoot(target, "feet") end
+            RunService.Heartbeat:Wait()
+        end
+    end)
+end)
+
+mainTab.newToggle("Remote Feet V3 (Target Input)", "Use Target Name for Remote Under Feet", false, function(state)
+    remoteFeetV3 = state
+    task.spawn(function()
+        while remoteFeetV3 do
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character then
+                        advancedSwapShoot(v, "feet")
+                        break
+                    end
+                end
+            end
+            task.wait(0.05)
+        end
+    end)
+end)
+
+mainTab.newLabel("--- Ultra Swap Shoot (สลับปืนแรง) ---")
+mainTab.newToggle("Swap Shoot V1 (Standard)", "High Damage Swap Shoot", false, function(state)
+    swapShootV1 = state
+    task.spawn(function()
+        while swapShootV1 do
+            local target = getClosestPlayer(1000)
+            if target then advancedSwapShoot(target, "swap") end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+mainTab.newToggle("Swap Shoot V2 (Precision)", "High Accuracy Predict Swap", false, function(state)
+    swapShootV2 = state
+    task.spawn(function()
+        while swapShootV2 do
+            local target = getClosestPlayer(1500)
+            if target then advancedSwapShoot(target, "swap") end
+            RunService.Heartbeat:Wait()
+        end
+    end)
+end)
+
+mainTab.newToggle("Swap Shoot V3 (God Mode)", "Destroy everything with Swap Speed", false, function(state)
+    swapShootV3 = state
+    task.spawn(function()
+        while swapShootV3 do
+            local target = getClosestPlayer(2000)
+            if target then 
+                task.spawn(advancedSwapShoot, target, "swap")
+                task.spawn(advancedSwapShoot, target, "swap") 
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newLabel("--- Original Combat ---")
+mainTab.newToggle("GOD BURST SHOT", "Shoot multi-bullets in one go", false, function(state) burstFireEnabled = state end)
+mainTab.newSlider("Burst Count", "Bullets per shot", 20, false, 5, function(v) burstAmount = v end)
+
+mainTab.newToggle("Ultimate Boss Hunter (FOLLOW)", "Guns orbit you & AUTO-SHOOT", false, function(state)
+    ultimateBossHunterEnabled = state
+    task.spawn(function()
+        while ultimateBossHunterEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            local root = char.HumanoidRootPart
+            local target = getClosestPlayer(800)
+            local targetPos = target and getUltimateTargetPos(target)
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            for _, item in ipairs(char:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            ubhAngle = ubhAngle + (dt * 5)
+            local radius = 8
+            for i, gun in ipairs(guns) do
+                local angle = ubhAngle + (i * (math.pi * 2 / #guns))
+                local offset = Vector3.new(math.cos(angle) * radius, 3, math.sin(angle) * radius)
+                local orbitPos = root.Position + offset
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("UBHBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("UBHBG") or Instance.new("BodyGyro", handle)
+                    bp.Name = "UBHBP" bg.Name = "UBHBG"
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^9 bp.P = 100000 
+                    bg.MaxTorque = Vector3.new(1,1,1) * 10^9 bg.P = 100000
+                    bp.Position = orbitPos
+                    if targetPos then
+                        bg.CFrame = CFrame.new(orbitPos, targetPos)
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then 
+                            local loopCount = burstFireEnabled and burstAmount or 1
+                            for b = 1, loopCount do remote:FireServer(targetPos) end
+                        end
+                    else bg.CFrame = CFrame.new(orbitPos, orbitPos + root.CFrame.LookVector) end
+                end
+            end
+        end
+        if not ultimateBossHunterEnabled then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do if item.Name == "UBHBP" or item.Name == "UBHBG" then item:Destroy() end end
+            if plr.Character then for _, item in ipairs(plr.Character:GetDescendants()) do if item.Name == "UBHBP" or item.Name == "UBHBG" then item:Destroy() end end end
+        end
+    end)
+end)
+
+mainTab.newToggle("Boss Hunter Spin (Only Visual)", "Spin guns around you", false, function(state)
+    bossHunterSpin = state
+    task.spawn(function()
+        while bossHunterSpin do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            local root = char.HumanoidRootPart
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            for _, item in ipairs(char:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            bhAngle = bhAngle + (dt * 12)
+            local radius = 7
+            for i, gun in ipairs(guns) do
+                local angle = bhAngle + (i * (math.pi * 2 / #guns))
+                local offset = Vector3.new(math.cos(angle) * radius, 3 + math.sin(bhAngle*0.5), math.sin(angle) * radius)
+                local orbitPos = root.Position + offset
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("BHSpinBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("BHSpinBG") or Instance.new("BodyGyro", handle)
+                    bp.Name = "BHSpinBP" bg.Name = "BHSpinBG"
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^9 bp.P = 150000 bg.MaxTorque = Vector3.new(1,1,1) * 10^9 bg.P = 150000
+                    bp.Position = orbitPos
+                    bg.CFrame = CFrame.new(orbitPos, orbitPos + root.CFrame.LookVector)
+                end
+            end
+        end
+        if not bossHunterSpin then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do if item.Name == "BHSpinBP" or item.Name == "BHSpinBG" then item:Destroy() end end
+            if plr.Character then for _, item in ipairs(plr.Character:GetDescendants()) do if item.Name == "BHSpinBP" or item.Name == "BHSpinBG" then item:Destroy() end end end
+        end
+    end)
+end)
+
+mainTab.newToggle("Sky Map Sweeper (GLOBAL)", "Shoot everyone in map from sky", false, function(state)
+    mapSweeperEnabled = state
+    task.spawn(function()
+        while mapSweeperEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char then continue end
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            for _, item in ipairs(char:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            if #guns == 0 then continue end
+            for _, targetPlayer in ipairs(game.Players:GetPlayers()) do
+                if not mapSweeperEnabled then break end
+                if targetPlayer == plr or table.find(scriptAdmins, targetPlayer.Name) then continue end
+                local tChar = targetPlayer.Character
+                local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+                local tHum = tChar and tChar:FindFirstChild("Humanoid")
+                if tRoot and tHum and tHum.Health > 0 then
+                    local gun = guns[math.random(1, #guns)]
+                    local handle = gun:FindFirstChild("Handle")
+                    if handle then
+                        local bp = handle:FindFirstChild("SweeperBP") or Instance.new("BodyPosition", handle)
+                        local bg = handle:FindFirstChild("SweeperBG") or Instance.new("BodyGyro", handle)
+                        bp.Name = "SweeperBP" bg.Name = "SweeperBG"
+                        bp.MaxForce = Vector3.new(1,1,1) * 10^7 bg.MaxTorque = Vector3.new(1,1,1) * 10^7
+                        local skyPos = tRoot.Position + Vector3.new(0, 300, 0)
+                        bp.Position = skyPos bg.CFrame = CFrame.new(skyPos, tRoot.Position)
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            local finalAim = tRoot.Position + (tRoot.Velocity * 0.21)
+                            local loopCount = burstFireEnabled and burstAmount or 1
+                            for b = 1, loopCount do remote:FireServer(finalAim) end
+                        end
+                    end
+                    task.wait(0.02)
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("Sky Gun Sentry (Follow Me/Target)", "Guns fly above you", false, function(state)
+    skySentryEnabled = state
+    task.spawn(function()
+        while skySentryEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            local target = nil
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then target = v break end
+                end
+            end
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            for _, item in ipairs(char:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            for i, gun in ipairs(guns) do
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("SentryBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("SentryBG") or Instance.new("BodyGyro", handle)
+                    bp.Name = "SentryBP" bg.Name = "SentryBG"
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^8 bp.P = 50000 bg.MaxTorque = Vector3.new(1,1,1) * 10^8 bg.P = 50000
+                    local basePosition = (target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")) and target.Character.HumanoidRootPart.Position or char.HumanoidRootPart.Position
+                    local offset = Vector3.new(math.sin(tick() + i) * 5, skyHeight, math.cos(tick() + i) * 5)
+                    local finalPos = basePosition + offset
+                    bp.Position = finalPos
+                    if target and target.Character and target.Character:FindFirstChild("Head") then
+                        local tHead = target.Character.Head.Position bg.CFrame = CFrame.new(finalPos, tHead)
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            local finalAim = tHead + (target.Character.HumanoidRootPart.Velocity * 0.21)
+                            local loopCount = burstFireEnabled and burstAmount or 1
+                            for b = 1, loopCount do remote:FireServer(finalAim) end
+                        end
+                    else bg.CFrame = CFrame.new(finalPos, finalPos + char.HumanoidRootPart.CFrame.LookVector) end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newSlider("Sky Height", "Adjust sentry altitude", 200, false, 50, function(v) skyHeight = v end)
+
+mainTab.newToggle("Click Target to Warp & Kill", "Click player to eliminate", false, function(state) clickKillEnabled = state end)
+
+mouse.Button1Down:Connect(function()
+    if not clickKillEnabled then return end
+    local targetObj = mouse.Target
+    if targetObj and targetObj.Parent then
+        local targetChar = targetObj.Parent:IsA("Model") and targetObj.Parent or targetObj.Parent.Parent
+        local targetHum = targetChar:FindFirstChild("Humanoid")
+        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+        if targetHum and targetRoot and targetChar.Name ~= plr.Name then
+            sendScriptMsg("Lock-On", "Eliminating " .. targetChar.Name)
+            task.spawn(function()
+                local startTime = tick()
+                while targetHum.Health > 0 and (tick() - startTime) < 4 and clickKillEnabled do
+                    RunService.Heartbeat:Wait()
+                    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
+                        plr.Character.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 2, -3) * CFrame.Angles(0, math.pi, 0)
+                    end
+                    safeUltraShoot(targetRoot.Position)
+                end
+            end)
+        end
+    end
+end)
+
+mainTab.newToggle("Ultimate Gun Circle & Shoot", "Orbit all guns", false, function(state)
+    gunOrbitEnabled = state
+    task.spawn(function()
+        while gunOrbitEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            local root = char.HumanoidRootPart
+            local target = getClosestPlayer(1000)
+            local targetPos = target and getUltimateTargetPos(target)
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            for _, item in ipairs(char:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end end
+            orbitAngle = orbitAngle + (dt * 5)
+            local radius = 6
+            for i, gun in ipairs(guns) do
+                local angle = orbitAngle + (i * (math.pi * 2 / #guns))
+                local offset = Vector3.new(math.cos(angle) * radius, 2, math.sin(angle) * radius)
+                local orbitPos = root.Position + offset
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("OrbitBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("OrbitBG") or Instance.new("BodyGyro", handle)
+                    bp.Name = "OrbitBP" bg.Name = "OrbitBG"
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^9 bp.P = 100000 bg.MaxTorque = Vector3.new(1,1,1) * 10^9 bg.P = 100000
+                    bp.Position = orbitPos
+                    if targetPos then
+                        bg.CFrame = CFrame.new(orbitPos, targetPos)
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            local loopCount = burstFireEnabled and burstAmount or 1
+                            for b = 1, loopCount do remote:FireServer(targetPos) end
+                        end
+                    else bg.CFrame = CFrame.new(orbitPos, orbitPos + root.CFrame.LookVector) end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("ULTIMATE SILENT AIM", "100% Accuracy with Prediction", false, function(state)
+    silentAimKill = state
+    task.spawn(function()
+        while silentAimKill do
+            local target = getClosestPlayer(1500) 
+            if target then
+                local aimPos = getUltimateTargetPos(target)
+                if aimPos then
+                    local gun = plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun"))
+                    if gun then
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            if gun.Parent == plr.Backpack then plr.Character.Humanoid:EquipTool(gun) end
+                            local loopCount = burstFireEnabled and burstAmount or 1
+                            for b = 1, loopCount do remote:FireServer(aimPos) end
+                            gun.Parent = plr.Backpack
+                        end
+                    end
+                end
+            end
+            RunService.Heartbeat:Wait() 
+        end
+    end)
+end)
+
+mainTab.newToggle("Hitbox Expander", "Increase enemy hitboxes", false, function(state)
+    hitboxEnabled = state
+    task.spawn(function()
+        while hitboxEnabled do
+            for _, v in ipairs(game.Players:GetPlayers()) do
+                if v ~= plr and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    -- ขยายทุกส่วนของร่างกายเพื่อให้โดนดาเมจแน่นอนขึ้น
+                    for _, part in ipairs(v.Character:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                            part.Transparency = 0.8
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+            task.wait(1)
+        end
+        for _, v in ipairs(game.Players:GetPlayers()) do
+            if v ~= plr and v.Character then
+                for _, part in ipairs(v.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Size = (part.Name == "HumanoidRootPart") and Vector3.new(2, 2, 1) or part.Size
+                        part.Transparency = (part.Name == "HumanoidRootPart") and 1 or 0
+                        part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("Warp & Orbit Spin", "Spin around target", false, function(state)
+    orbitSpinEnabled = state
+    local angle = 0
+    task.spawn(function()
+        while orbitSpinEnabled do
+            local dt = RunService.Heartbeat:Wait() 
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        local root = v.Character.HumanoidRootPart
+                        angle = angle + (7 * dt) 
+                        local offset = Vector3.new(math.cos(angle) * 7, 4, math.sin(angle) * 7)
+                        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
+                        plr.Character.HumanoidRootPart.CFrame = CFrame.new(root.Position + offset, root.Position)
+                        local aimPos = getUltimateTargetPos(v)
+                        if aimPos then safeUltraShoot(aimPos) end
+                        break
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newLabel("Warp System")
+mainTab.newInput("Target Name", "Enter player name", function(t) targetSearchName = t end)
+
+mainTab.newToggle("Warp & Kill (Above)", "Teleport above target", false, function(state)
+    tpAboveHeadEnabled = state
+    task.spawn(function()
+        while tpAboveHeadEnabled do
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        plr.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame * CFrame.new(0, 8, 0)
+                        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
+                        local aimPos = getUltimateTargetPos(v)
+                        if aimPos then safeUltraShoot(aimPos) end
+                        break 
+                    end
+                end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 2: VISUALS ]
+---------------------------------------------------------
+local visualTab = DrRayLibrary.newTab("Visuals", "rbxassetid://10734951151")
+visualTab.newInput("Custom Name", "Change text for Rainbow Name", function(t) customNameTag = t end)
+visualTab.newToggle("Rainbow Scroll Name", "LED Scrolling Name", false, function(state)
+    rainbowNameEnabled = state
+    task.spawn(function()
+        local text = customNameTag .. "          " 
+        local index = 1
+        while rainbowNameEnabled do
+            local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+            local displayPart = ""
+            for i = 0, 14 do
+                local charPos = ((index + i - 1) % #text) + 1
+                displayPart = displayPart .. string.sub(text, charPos, charPos)
+            end
+            game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(displayPart, color, 38)
+            index = index + 1 if index > #text then index = 1 end
+            task.wait(0.12)
+        end
+    end)
+end)
+
+visualTab.newButton("Full Bright / Full ESP", "See everything clearly", function()
+    game:GetService("Lighting").Brightness = 2
+    game:GetService("Lighting").ClockTime = 14
+    game:GetService("Lighting").FogEnd = 100000
+    for _, v in ipairs(game.Players:GetPlayers()) do
+        if v ~= plr and v.Character then
+            local highlight = Instance.new("Highlight", v.Character)
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        end
+    end
+end)
+
+visualTab.newToggle("Rainbow Boombox", "12-Color Disco Mode", false, function(state)
+    rainbowBoomboxEnabled = state
+    task.spawn(function()
+        local colors = {"Really red", "Deep orange", "New Yeller", "Lime green", "Electric blue", "Really blue", "Hot pink", "Institutional white", "Black", "Magenta", "Cyan", "Alder"}
+        local index = 1
+        while rainbowBoomboxEnabled do
+            workspace.DRadio_Script.Color:FireServer(BrickColor.new(colors[index]))
+            index = (index % #colors) + 1
+            task.wait(0.3)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 3: AUTO FARM ]
+---------------------------------------------------------
+local farmTab = DrRayLibrary.newTab("Auto Farm", "rbxassetid://10734951151")
+farmTab.newToggle("Auto Sell", "Automatic Money Farming", false, function(state)
+    autoSellEnabled = state
+    task.spawn(function() while autoSellEnabled do game:GetService("ReplicatedStorage").House:FireServer("Sell") task.wait(0.01) end end)
+end)
+farmTab.newToggle("Auto Armor / Food", "Spam remote", false, function(state)
+    autoArmor = state
+    task.spawn(function() while autoArmor do game:GetService("ReplicatedStorage").ArmorRemote:FireServer() task.wait(0.5) end end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 4: AUTO SHOP ]
+---------------------------------------------------------
+local shopTab = DrRayLibrary.newTab("Auto Shop", "rbxassetid://10734951151")
+shopTab.newToggle("Auto Claim Items", "Retrieve items automatically", false, function(state) autoClaimEnabled = state end)
+shopTab.newButton("Manual Claim (Once)", "Click to claim items once", function() game:GetService("ReplicatedStorage").GetItemBack:FireServer() end)
+task.spawn(function() while task.wait(0.5) do if autoClaimEnabled then game:GetService("ReplicatedStorage").GetItemBack:FireServer() end end end)
+
+local function findAndClick(targetPos)
+    local closestClick = nil
+    for _, v in ipairs(game.Workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then closestClick = v break end
+        end
+    end
+    if closestClick then 
+        if fireclickdetector then fireclickdetector(closestClick) 
+        else
+            local char = plr.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local oldPos = char.HumanoidRootPart.CFrame
+                char.HumanoidRootPart.CFrame = closestClick.Parent.CFrame
+                task.wait(0.1)
+                char.HumanoidRootPart.CFrame = oldPos
+            end
+        end
+        return true 
+    end
+    return false
+end
+
+shopTab.newToggle("Auto Buy Gun Loop (Max 10)", "Dup up to 10 items", false, function(state)
+    autoBuyLoop = state
+    isForcingHolster = state
+    task.spawn(function()
+        local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+        while autoBuyLoop do
+            if needsMore("Gun") then
+                for i = 1, 10 do if not autoBuyLoop then break end if findAndClick(Vector3.new(-76.84, 162.67, 231.24)) then task.wait(0.1) toolStorage:FireServer("Save", "Gun") end end
+                task.wait(0.5)
+                for i = 1, 10 do if not autoBuyLoop then break end toolStorage:FireServer("Get", "Gun") task.wait(0.05) end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+shopTab.newToggle("Auto Buy Phone Loop (Max 10)", "Dup items", false, function(state)
+    autoBuyPhoneLoop = state
+    isForcingHolster = state
+    task.spawn(function()
+        local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+        while autoBuyPhoneLoop do
+            if needsMore("Phone") then
+                for i = 1, 10 do if not autoBuyPhoneLoop then break end if findAndClick(Vector3.new(89.44, 176.45, 269.08)) then task.wait(0.1) toolStorage:FireServer("Save", "Phone") end end
+                task.wait(0.5)
+                for i = 1, 10 do if not autoBuyPhoneLoop then break end toolStorage:FireServer("Get", "Phone") task.wait(0.05) end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+shopTab.newToggle("Auto Buy Boombox Loop (Max 10)", "Dup items", false, function(state)
+    autoBuyBoomboxLoop = state
+    isForcingHolster = state
+    task.spawn(function()
+        local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+        while autoBuyBoomboxLoop do
+            if needsMore("Boombox") then
+                for i = 1, 10 do if not autoBuyBoomboxLoop then break end if findAndClick(Vector3.new(89.44, 176.45, 256.52)) then task.wait(0.1) toolStorage:FireServer("Save", "Boombox") end end
+                task.wait(0.5)
+                for i = 1, 10 do if not autoBuyBoomboxLoop then break end toolStorage:FireServer("Get", "Boombox") task.wait(0.05) end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 5: MISC ]
+---------------------------------------------------------
+local miscTab = DrRayLibrary.newTab("Misc", "rbxassetid://10734951151")
+miscTab.newToggle("GOD ANTI-WARP", "High protection", false, function(state)
+    antiWarpEnabled = state
+    if state then
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then lastValidPos = plr.Character.HumanoidRootPart.CFrame end
+        task.spawn(function()
+            while antiWarpEnabled do
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp and char.Humanoid.Health > 0 then
+                    if hrp.Anchored then hrp.Anchored = false end
+                    for _, obj in ipairs(hrp:GetChildren()) do if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then obj:Destroy() end end
+                    if lastValidPos and (hrp.Position - lastValidPos.Position).Magnitude > 50 and not (orbitSpinEnabled or tpAboveHeadEnabled) then hrp.CFrame = lastValidPos hrp.Velocity = Vector3.zero else lastValidPos = hrp.CFrame end
+                end
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    end
+end)
+
+miscTab.newToggle("Enable Flight", "Fly around", false, function(state)
+    flightEnabled = state
+    local bg = Instance.new("BodyGyro", plr.Character.HumanoidRootPart)
+    local bv = Instance.new("BodyVelocity", plr.Character.HumanoidRootPart)
+    bg.P = 9e4 bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    task.spawn(function()
+        while flightEnabled do bv.velocity = workspace.CurrentCamera.CFrame.LookVector * flySpeed bg.cframe = workspace.CurrentCamera.CFrame task.wait() end
+        bg:Destroy() bv:Destroy()
+    end)
+end)
+
+miscTab.newToggle("No Clip", "Walk through walls", false, function(state)
+    noClipEnabled = state
+    RunService.Stepped:Connect(function()
+        if noClipEnabled and plr.Character then
+            for _, v in pairs(plr.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+        end
+    end)
+end)
+
+miscTab.newToggle("Super Speed (80)", "Fast run", false, function(state)
+    task.spawn(function()
+        while state do if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.WalkSpeed = 80 end task.wait(0.1) end
+        if plr.Character then plr.Character.Humanoid.WalkSpeed = 16 end
+    end)
+end)
+
+miscTab.newToggle("Super Jump (100)", "High jump", false, function(state)
+    task.spawn(function()
+        while state do if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.JumpPower = 100 end task.wait(0.1) end
+        if plr.Character then plr.Character.Humanoid.JumpPower = 50 end
+    end)
+end)
+
+miscTab.newButton("Auto Lie & Return", "Bed warp for 3s", function()
+    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then local old = hrp.CFrame hrp.CFrame = CFrame.new(522.18, 178.18, -130.85) task.wait(3) hrp.CFrame = old end
+end)
+
+miscTab.newLabel("Firefly Spawner (New)")
+miscTab.newInput("Amount", "Enter number", function(text) local num = tonumber(text) if num and num > 0 then fireflyCount = num end end)
+miscTab.newSlider("Adjust Amount", "1-1000", 1000, false, 100, function(v) fireflyCount = v end)
+miscTab.newButton("Start Spawning Fireflies", "Spawn amount", function() if not fireflySpawning then spawnFireflies(fireflyCount) end end)
+miscTab.newButton("Stop Spawning", "Stop immediately", function() stopAllFirefly = true task.wait(0.5) stopAllFirefly = false fireflySpawning = false end)
+miscTab.newButton("Clear All Fireflies", "Remove from map", function()
+    for _, obj in pairs(workspace:GetDescendants()) do if string.find(string.lower(obj.Name), "firefly") then obj:Destroy() end end
+end)
