@@ -712,11 +712,20 @@ mainTab.newToggle("ULTIMATE SILENT AIM", "100% Accuracy with Prediction", false,
                 if aimPos then
                     local phone = plr.Backpack:FindFirstChild("Phone") or (plr.Character and plr.Character:FindFirstChild("Phone"))
                     if phone then
+                        local wasInBackpack = phone.Parent == plr.Backpack
+                        if wasInBackpack then
+                            plr.Character.Humanoid:EquipTool(phone)
+                        end
+                        
                         local remote = phone:FindFirstChild("shot") or phone:FindFirstChild("RemoteEvent")
                         if remote then
-                            if phone.Parent == plr.Backpack then plr.Character.Humanoid:EquipTool(phone) end
                             local loopCount = burstFireEnabled and burstAmount or 1
-                            for b = 1, loopCount do remote:FireServer(aimPos) end
+                            for b = 1, loopCount do
+                                remote:FireServer(aimPos)
+                            end
+                        end
+                        
+                        if wasInBackpack then
                             phone.Parent = plr.Backpack
                         end
                     end
